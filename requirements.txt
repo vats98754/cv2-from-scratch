@@ -5,5 +5,3 @@ matplotlib
 kagglehub
 scipy
 numba
-nvidia-cudnn
-nvidia-cudnn-frontend

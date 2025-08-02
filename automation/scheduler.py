@@ -470,9 +470,19 @@ class JobScheduler:
         try:
             jobs_file = self.data_dir / "jobs.json"
             jobs_data = {
-                'jobs': {job_id: asdict(job) for job_id, job in self.jobs.items()},
+                'jobs': {
+                    job_id: {
+                        **asdict(job),
+                        'trigger_type': job.trigger_type.value
+                    } for job_id, job in self.jobs.items()
+                },
                 'executions': {
-                    job_id: [asdict(ex) for ex in executions]
+                    job_id: [
+                        {
+                            **asdict(ex),
+                            'status': ex.status.value
+                        } for ex in executions
+                    ]
                     for job_id, executions in self.executions.items()
                 }
             }

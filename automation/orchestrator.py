@@ -7,6 +7,7 @@ import asyncio
 import json
 import re
 import time
+import random
 from typing import Dict, List, Optional, Any, Union
 from dataclasses import dataclass, asdict
 from enum import Enum
@@ -172,15 +173,20 @@ class TaskOrchestrator:
         text_lower = text.lower()
         
         # Pattern for account creation
-        if any(keyword in text_lower for keyword in ['create account', 'sign up', 'register']):
+        if any(keyword in text_lower for keyword in ['create account', 'sign up', 'register', 'create']) and \
+           any(platform in text_lower for platform in ['twitter', 'instagram', 'facebook', 'reddit', 'discord']):
             platform = self._extract_platform(text_lower)
             if platform:
+                # Extract count if specified
+                count_match = re.search(r'(\d+)', text)
+                count = int(count_match.group(1)) if count_match else 1
+                
                 task = TaskDefinition(
                     task_id=f"account_creation_{platform}_{int(time.time())}",
-                    name=f"Create {platform} account",
+                    name=f"Create {count} {platform} account{'s' if count > 1 else ''}",
                     task_type=TaskType.ACCOUNT_CREATION,
-                    description=f"Create account on {platform}",
-                    parameters={"platform": platform}
+                    description=f"Create {count} account{'s' if count > 1 else ''} on {platform}",
+                    parameters={"platform": platform, "count": count}
                 )
                 tasks.append(task)
                 
@@ -190,6 +196,12 @@ class TaskOrchestrator:
         
         if any(pattern in text_lower for pattern in scraping_patterns):
             urls = re.findall(url_pattern, text)
+            if not urls and 'from' in text_lower:
+                # Extract domain name if no full URL
+                domain_match = re.search(r'from\s+([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})', text_lower)
+                if domain_match:
+                    urls = [f"https://{domain_match.group(1)}"]
+                    
             for url in urls:
                 task = TaskDefinition(
                     task_id=f"scraping_{hash(url)}_{int(time.time())}",
@@ -197,6 +209,18 @@ class TaskOrchestrator:
                     task_type=TaskType.DATA_SCRAPING,
                     description=f"Extract data from {url}",
                     parameters={"url": url, "selectors": {}, "output_format": "json"}
+                )
+                tasks.append(task)
+                
+        # Pattern for monitoring/checking
+        if any(keyword in text_lower for keyword in ['check', 'monitor', 'watch']):
+            if any(platform in text_lower for platform in ['social media', 'accounts', 'twitter', 'instagram']):
+                task = TaskDefinition(
+                    task_id=f"monitoring_{int(time.time())}",
+                    name="Monitor social media accounts",
+                    task_type=TaskType.MONITORING,
+                    description="Check social media accounts for updates",
+                    parameters={"platforms": ["twitter", "instagram", "facebook"], "check_messages": True, "check_notifications": True}
                 )
                 tasks.append(task)
                 
@@ -212,7 +236,9 @@ class TaskOrchestrator:
             'every tuesday': '0 9 * * 2',
             'every wednesday': '0 9 * * 3',
             'every thursday': '0 9 * * 4',
-            'every friday': '0 9 * * 5'
+            'every friday': '0 9 * * 5',
+            'every 30 minutes': '*/30 * * * *',
+            'every 15 minutes': '*/15 * * * *'
         }
         
         schedule = None
@@ -220,6 +246,20 @@ class TaskOrchestrator:
             if pattern in text_lower:
                 schedule = cron
                 break
+                
+        # Extract time if specified
+        time_match = re.search(r'at (\d{1,2})\s*(?::|am|pm)', text_lower)
+        if time_match and schedule:
+            hour = int(time_match.group(1))
+            if 'pm' in text_lower and hour != 12:
+                hour += 12
+            elif 'am' in text_lower and hour == 12:
+                hour = 0
+            # Replace hour in cron expression
+            schedule_parts = schedule.split()
+            if len(schedule_parts) >= 2:
+                schedule_parts[1] = str(hour)
+                schedule = ' '.join(schedule_parts)
                 
         # Apply schedule to all tasks
         for task in tasks:

@@ -429,7 +429,10 @@ class ProcessManager:
             processes_file = self.data_dir / "processes.json"
             processes_data = {
                 process_id: {
-                    'config': asdict(process_info.config),
+                    'config': {
+                        **asdict(process_info.config),
+                        'type': process_info.config.type.value
+                    },
                     'status': process_info.status.value,
                     'restart_count': process_info.restart_count
                 }

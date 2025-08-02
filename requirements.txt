@@ -1,3 +1,4 @@
+# Core dependencies (legacy CV support)
 numpy
 pandas
 opencv-python
@@ -5,3 +6,40 @@ matplotlib
 kagglehub
 scipy
 numba
+
+# Web automation and browser
+playwright
+selenium
+undetected-chromedriver
+
+# Web framework and API
+fastapi
+uvicorn[standard]
+pydantic
+aiofiles
+
+# Scheduling and background processing
+apscheduler
+croniter
+
+# CAPTCHA solving and HTTP
+requests
+aiohttp
+python-multipart
+
+# LLM and AI integration
+openai
+anthropic
+
+# Data processing and utilities
+python-dotenv
+pyyaml
+jinja2
+
+# Testing (optional)
+pytest
+pytest-asyncio
+
+# Development tools (optional)
+black
+flake8

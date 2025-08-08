@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 import kagglehub
-from FromScratchGaussianBlur import FromScratchGaussianBlur
+from linear_filters.FromScratchGaussianBlur import FromScratchGaussianBlur
 
 def myconvolve2d(img, kernel):
     kernel_height = kernel.shape[0]
